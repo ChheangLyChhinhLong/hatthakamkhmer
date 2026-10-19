@@ -1,0 +1,13 @@
+import { useState } from 'react';
+import { CheckCircle2, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
+
+export default function Contact() {
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  function handleSubmit(event) {
+    event.preventDefault();
+    setSubmitted(true);
+    setForm({ name: '', email: '', message: '' });
+  }
+  return <div className="contact-page"><section className="page-banner contact-banner"><div className="wrap"><span className="eyebrow">WE WOULD LOVE TO HEAR FROM YOU</span><h1>ចាប់ផ្ដើមការសន្ទនា</h1><p>មានសំណួរ ឬចង់សហការជាមួយសិប្បករ? យើងរីករាយជួយអ្នក។</p><div className="breadcrumb"><span>ទំព័រដើម</span><span>/</span><strong>ទំនាក់ទំនង</strong></div></div></section><section className="wrap contact-layout"><div className="contact-info"><span className="eyebrow">GET IN TOUCH</span><h2>យើងនៅទីនេះ<br />ដើម្បីស្តាប់អ្នក</h2><p>ទាក់ទងមកយើង ប្រសិនបើអ្នកចង់ដឹងបន្ថែមអំពីផលិតផល ការដឹកជញ្ជូន ឬរបៀបចូលរួមជាមួយសហគមន៍សិប្បករ។</p><div className="contact-method"><span><Mail size={18} /></span><div><small>អ៊ីមែល</small><strong>hello@hatthakamkhmer.com</strong><p>ឆ្លើយតបក្នុងរយៈពេល ១ ថ្ងៃធ្វើការ</p></div></div><div className="contact-method"><span><Phone size={18} /></span><div><small>ទូរស័ព្ទ</small><strong>+855 12 345 678</strong><p>ច័ន្ទ–សុក្រ · ៨:០០ ព្រឹក–៥:០០ ល្ងាច</p></div></div><div className="contact-method"><span><MapPin size={18} /></span><div><small>ទីតាំង</small><strong>ភ្នំពេញ ប្រទេសកម្ពុជា</strong><p>បម្រើសហគមន៍ទូទាំងប្រទេស</p></div></div><div className="contact-note"><MessageCircle size={17} /> យើងនិយាយភាសាខ្មែរ និងអង់គ្លេស</div></div><form className="contact-form" onSubmit={handleSubmit}><span className="eyebrow">SEND US A NOTE</span><h2>ផ្ញើសារមកយើង</h2><label htmlFor="contact-name">ឈ្មោះរបស់អ្នក</label><input id="contact-name" name="name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="បញ្ចូលឈ្មោះ" required /><label htmlFor="contact-email">អ៊ីមែល</label><input id="contact-email" name="email" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="you@example.com" required /><label htmlFor="contact-message">សាររបស់អ្នក</label><textarea id="contact-message" name="message" rows="5" value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} placeholder="តើមានអ្វីដែលយើងអាចជួយបាន?" required /><button className="button button-primary button-full" type="submit">ផ្ញើសារ <Send size={16} /></button>{submitted && <p className="form-success" role="status"><CheckCircle2 size={18} /> អរគុណ! សាររបស់អ្នកត្រូវបានផ្ញើដោយជោគជ័យ។</p>}</form></section></div>;
+}

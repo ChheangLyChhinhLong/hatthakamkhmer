@@ -1,0 +1,32 @@
+@config "./tailwind.config.js";
+@import "tailwindcss";
+
+:root {
+  font-family: 'Kantumruy Pro', sans-serif;
+  color: #3e2723;
+  background: #fdfbf7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  --wood: #5c4033;
+  --wood-dark: #3e2723;
+  --wood-light: #8b5a2b;
+  --gold: #d4af37;
+  --green: #2e8b57;
+  --paper: #fdfbf7;
+  --muted: #837b70;
+  --line: #e9e3d9;
+  --title: 'Moul', serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--paper); }
+body, button, input, textarea, select { font-family: 'Kantumruy Pro', sans-serif; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { color: inherit; }
+a { color: inherit; text-decoration: none; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+img { max-width: 100%; }
+::selection { color: var(--wood-dark); background: #eadb9c; }
