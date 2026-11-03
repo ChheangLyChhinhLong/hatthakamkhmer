@@ -23,7 +23,7 @@ export async function applyPaymentEvent({
     p_admin_chat_id: process.env.TELEGRAM_ADMIN_GROUP_ID || null,
   });
   if (error) {
-    console.error('KHPay payment event was not applied:', error.message);
+    console.error('khqrpay payment event was not applied:', error.message);
     throw createHttpError(400, 'The payment notification did not match a valid pending order.');
   }
   if (data?.processed && status === 'paid') {

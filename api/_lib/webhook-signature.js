@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-export function verifyKhpaySignature(rawBody, headers, secret) {
-  const signature = headers['x-webhook-signature'] || headers['x-khpay-signature'];
+export function verifyKhqrpaySignature(rawBody, headers, secret) {
+  const signature = headers['x-webhook-signature'];
   if (typeof signature !== 'string' || !/^(?:sha256=)?[a-f\d]{64}$/i.test(signature)) return false;
   const receivedHex = signature.replace(/^sha256=/i, '');
   const received = Buffer.from(receivedHex, 'hex');

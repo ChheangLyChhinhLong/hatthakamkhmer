@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 import { handleError, requireEnv, sendJson } from '../_lib/http.js';
+import { normalizeKhqrpayStatus } from '../_lib/khqrpay.js';
 import { applyPaymentEvent } from '../_lib/payments.js';
-import { verifyKhpaySignature } from '../_lib/webhook-signature.js';
+import { verifyKhqrpaySignature } from '../_lib/webhook-signature.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -26,10 +27,10 @@ export default async function handler(req, res) {
     return sendJson(res, 405, { error: 'Method not allowed.' });
   }
   try {
-    requireEnv(['KHPAY_WEBHOOK_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']);
+    requireEnv(['KHQRPAY_WEBHOOK_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']);
     const rawBody = await readRawBody(req);
-    if (!verifyKhpaySignature(rawBody, req.headers, process.env.KHPAY_WEBHOOK_SECRET)) {
-      return sendJson(res, 401, { error: 'Invalid KHPay webhook signature.' });
+    if (!verifyKhqrpaySignature(rawBody, req.headers, process.env.KHQRPAY_WEBHOOK_SECRET)) {
+      return sendJson(res, 401, { error: 'Invalid khqrpay webhook signature.' });
     }
     let payload;
     try {
@@ -37,21 +38,26 @@ export default async function handler(req, res) {
     } catch {
       return sendJson(res, 400, { error: 'Invalid webhook JSON.' });
     }
-    const data = payload.data && typeof payload.data === 'object' ? payload.data : payload;
-    const transactionId = data.transaction_id || payload.transaction_id;
-    const event = payload.event;
-    const status = event === 'payment.paid' ? 'paid'
-      : event === 'payment.expired' ? 'expired'
-        : event === 'payment.failed' ? 'failed' : null;
-    if (!status || typeof transactionId !== 'string') {
-      return sendJson(res, 400, { error: 'Unsupported KHPay event payload.' });
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      return sendJson(res, 400, { error: 'Invalid webhook payload.' });
     }
-    const amount = data.amount ?? payload.amount;
-    const currency = data.currency || payload.currency;
-    if (amount === undefined || !/^\d+(?:\.\d{1,2})?$/.test(String(amount)) || !currency) {
-      return sendJson(res, 400, { error: 'KHPay event has no valid amount or currency.' });
+    const rawTransactionId = payload.id ?? payload.transaction_id;
+    const transactionId = rawTransactionId === undefined ? null : String(rawTransactionId);
+    const status = normalizeKhqrpayStatus(payload.status);
+    if (status === 'underpaid') {
+      console.warn('khqrpay reported an underpaid transaction requiring manual review:', transactionId);
+      return sendJson(res, 200, { received: true, processed: false, reason: 'underpaid_requires_review' });
+    }
+    if (!['paid', 'expired', 'failed'].includes(status) || !/^\d{12}$/.test(transactionId || '')) {
+      return sendJson(res, 400, { error: 'Unsupported khqrpay webhook payload.' });
+    }
+    const amount = payload.amount;
+    const currency = payload.currency || 'USD';
+    if (amount === undefined || !/^\d+(?:\.\d{1,2})?$/.test(String(amount))) {
+      return sendJson(res, 400, { error: 'khqrpay webhook has no valid amount.' });
     }
     const digest = createHash('sha256').update(rawBody).digest('hex');
+    const event = `payment.${status}`;
     const result = await applyPaymentEvent({
       transactionId,
       amount: String(amount),

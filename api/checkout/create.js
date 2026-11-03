@@ -1,6 +1,6 @@
 import { handleError, methodNotAllowed, readBody, requireEnv, sendJson, createHttpError } from '../_lib/http.js';
 import { getAdminClient, requireUser } from '../_lib/supabase.js';
-import { khpayRequest } from '../_lib/khpay.js';
+import { khqrpayRequest } from '../_lib/khqrpay.js';
 import { notifyNewOrder } from '../_lib/telegram.js';
 
 function validRequiredText(value, maxLength) {
@@ -53,40 +53,37 @@ async function createPayment(client, order, method, baseUrl) {
   }
 
   const callbackUrl = `${baseUrl}/api/v1/webhooks`;
-  const common = {
-    currency: 'USD',
-    note: `Hatthakam order ${order.id.slice(0, 8)}`,
-    success_url: `${baseUrl}/payment/return?order=${order.id}`,
-    cancel_url: `${baseUrl}/cart?payment=cancelled&order=${order.id}`,
-    callback_url: callbackUrl,
-    metadata: { order_id: order.id },
+  const requestBody = {
+    amount: Number(order.total_usd),
+    webhook: callbackUrl,
   };
   const paymentData = method === 'aba'
-    ? await khpayRequest('/qr/generate', {
+    ? await khqrpayRequest('/aba/create', {
         method: 'POST',
         idempotencyKey: `order-${order.id}`,
-        body: { ...common, amount: Number(order.total_usd).toFixed(2) },
+        body: requestBody,
       })
-    : await khpayRequest('/bakong/generate', {
+    : await khqrpayRequest('/bakong/create', {
         method: 'POST',
         idempotencyKey: `order-${order.id}`,
-        body: { ...common, amount: Number(order.total_usd), type: 'individual', static: false },
+        body: requestBody,
       });
 
+  const paymentId = String(paymentData.id ?? '');
   let paymentUrl;
   try {
-    paymentUrl = new URL(paymentData.payment_url);
+    paymentUrl = new URL(paymentData.checkout_url);
   } catch {
-    throw new Error('KHPay returned an invalid payment URL.');
+    throw new Error('khqrpay returned an invalid checkout URL.');
   }
-  if (!paymentData.transaction_id || paymentUrl.protocol !== 'https:' || paymentUrl.hostname !== 'khpay.site') {
-    throw new Error('KHPay returned an invalid payment response.');
+  if (!/^\d{12}$/.test(paymentId) || paymentUrl.protocol !== 'https:' || paymentUrl.hostname !== 'khqrpay.site') {
+    throw new Error('khqrpay returned an invalid payment response.');
   }
 
   const { error: transactionError } = await client.from('transactions').insert({
     order_id: order.id,
     gateway: method,
-    provider_transaction_id: paymentData.transaction_id,
+    provider_transaction_id: paymentId,
     amount_usd: order.total_usd,
     currency: 'USD',
     status: 'pending',
@@ -95,7 +92,7 @@ async function createPayment(client, order, method, baseUrl) {
     md5: paymentData.md5 || null,
     expires_at: paymentData.expires_at || null,
     provider_response: {
-      transaction_id: paymentData.transaction_id,
+      id: paymentData.id,
       amount: paymentData.amount,
       currency: paymentData.currency,
       status: paymentData.status,
@@ -113,7 +110,7 @@ async function createPayment(client, order, method, baseUrl) {
   }
   if (transactionError) throw transactionError;
   return {
-    transactionId: paymentData.transaction_id,
+    transactionId: paymentId,
     paymentUrl: paymentUrl.href,
     qr: paymentData.qr || null,
     expiresAt: paymentData.expires_at || null,
@@ -157,7 +154,7 @@ export default async function handler(req, res) {
       return { id: item.id, quantity: item.quantity };
     }).sort((left, right) => left.id.localeCompare(right.id));
     if (body.paymentMethod !== 'cod') {
-      requireEnv(['KHPAY_API_KEY', 'KHPAY_WEBHOOK_SECRET', 'PUBLIC_BASE_URL']);
+      requireEnv(['KHQRPAY_API_KEY', 'KHQRPAY_WEBHOOK_SECRET', 'PUBLIC_BASE_URL']);
     }
     const baseUrl = body.paymentMethod === 'cod' ? null : getPublicBaseUrl();
     const client = getAdminClient();

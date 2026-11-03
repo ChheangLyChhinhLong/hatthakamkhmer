@@ -1,5 +1,5 @@
 import { handleError, methodNotAllowed, sendJson, createHttpError } from '../_lib/http.js';
-import { khpayRequest, normalizeGatewayStatus } from '../_lib/khpay.js';
+import { khqrpayRequest, normalizeKhqrpayStatus } from '../_lib/khqrpay.js';
 import { applyPaymentEvent } from '../_lib/payments.js';
 import { getAdminClient, requireUser } from '../_lib/supabase.js';
 
@@ -25,18 +25,29 @@ export default async function handler(req, res) {
     if (transactionError || !transaction) throw createHttpError(404, 'Payment transaction not found.');
 
     if (order.status === 'paid') return sendJson(res, 200, { orderId, status: 'paid' });
-    const providerResult = await khpayRequest(`/qr/check/${encodeURIComponent(transaction.provider_transaction_id)}`);
-    const status = normalizeGatewayStatus(providerResult.status || providerResult.action);
+    const providerResult = await khqrpayRequest(`/payment?id=${encodeURIComponent(transaction.provider_transaction_id)}`);
+    const payment = providerResult.payment;
+    if (!payment || String(payment.id) !== transaction.provider_transaction_id) {
+      throw createHttpError(502, 'khqrpay returned an invalid payment status response.');
+    }
+    const status = normalizeKhqrpayStatus(payment.status);
+    if (!status) throw createHttpError(502, 'khqrpay returned an unsupported payment status.');
+    if (status === 'underpaid') {
+      return sendJson(res, 200, { orderId, status: order.status, paymentStatus: status });
+    }
     if (status && status !== 'pending') {
-      const amount = providerResult.amount ?? transaction.amount_usd;
-      const currency = providerResult.currency || transaction.currency;
+      const amount = payment.amount;
+      if (amount === undefined || !/^\d+(?:\.\d{1,2})?$/.test(String(amount))) {
+        throw createHttpError(502, 'khqrpay returned an invalid payment amount.');
+      }
+      const currency = payment.currency || transaction.currency;
       await applyPaymentEvent({
         transactionId: transaction.provider_transaction_id,
         amount: String(amount),
         currency,
         status,
         event: `payment.${status}`,
-        payload: { source: 'server_status_check', ...providerResult },
+        payload: { source: 'server_status_check', ...payment },
         dedupeKey: `status-check:${transaction.provider_transaction_id}:${status}`,
       });
       const { data: updatedOrder, error: updatedError } = await client.from('orders')
@@ -46,7 +57,7 @@ export default async function handler(req, res) {
       if (updatedError) throw updatedError;
       return sendJson(res, 200, { orderId, status: updatedOrder.status });
     }
-    return sendJson(res, 200, { orderId, status: status || order.status });
+    return sendJson(res, 200, { orderId, status: order.status });
   } catch (error) {
     return handleError(res, error);
   }

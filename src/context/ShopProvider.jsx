@@ -24,7 +24,7 @@ export function ShopProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profileState, setProfileState] = useState(null);
   const [authLoading, setAuthLoading] = useState(Boolean(supabase));
-  const profile = profileState?.userId === session?.user?.id ? profileState.value : null;
+  const profile = profileState && profileState.userId === session?.user?.id ? profileState.value : null;
 
   useEffect(() => {
     localStorage.setItem('hatthakam-cart', JSON.stringify(cart));
