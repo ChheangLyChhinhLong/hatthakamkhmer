@@ -1,5 +1,5 @@
-import { handleError, methodNotAllowed, sendJson } from '../_lib/http.js';
-import { requireAdmin, getAdminClient } from '../_lib/supabase.js';
+import { handleError, methodNotAllowed, sendJson } from '../http.js';
+import { requireAdmin, getAdminClient } from '../supabase.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);

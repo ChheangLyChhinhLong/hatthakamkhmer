@@ -1,5 +1,5 @@
-import { handleError, methodNotAllowed, readBody, sendJson, createHttpError } from '../../_lib/http.js';
-import { getAdminClient, requireAdmin } from '../../_lib/supabase.js';
+import { handleError, methodNotAllowed, readBody, sendJson, createHttpError } from '../http.js';
+import { getAdminClient, requireAdmin } from '../supabase.js';
 
 const transitions = {
   pending_cod: ['processing', 'cancelled'],

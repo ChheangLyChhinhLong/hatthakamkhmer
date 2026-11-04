@@ -1,7 +1,7 @@
-import { handleError, methodNotAllowed, sendJson, createHttpError } from '../_lib/http.js';
-import { khqrpayRequest, normalizeKhqrpayStatus } from '../_lib/khqrpay.js';
-import { applyPaymentEvent } from '../_lib/payments.js';
-import { getAdminClient, requireUser } from '../_lib/supabase.js';
+import { handleError, methodNotAllowed, sendJson, createHttpError } from '../http.js';
+import { khqrpayRequest, normalizeKhqrpayStatus } from '../khqrpay.js';
+import { applyPaymentEvent } from '../payments.js';
+import { getAdminClient, requireUser } from '../supabase.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);

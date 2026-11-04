@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { handleError, methodNotAllowed, requireEnv, sendJson } from '../_lib/http.js';
-import { requireAdmin } from '../_lib/supabase.js';
+import { handleError, methodNotAllowed, requireEnv, sendJson } from '../http.js';
+import { requireAdmin } from '../supabase.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);

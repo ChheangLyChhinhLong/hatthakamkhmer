@@ -1,6 +1,6 @@
-import { handleError, methodNotAllowed, sendJson } from './_lib/http.js';
-import { PRODUCT_COLUMNS, toProduct } from './_lib/catalog.js';
-import { getAdminClient } from './_lib/supabase.js';
+import { handleError, methodNotAllowed, sendJson } from '../http.js';
+import { PRODUCT_COLUMNS, toProduct } from '../catalog.js';
+import { getAdminClient } from '../supabase.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);

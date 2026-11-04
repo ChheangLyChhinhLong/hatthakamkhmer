@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { getJwtClaims, hashAdminOtp } from '../../_lib/admin-otp.js';
-import { createHttpError, handleError, methodNotAllowed, readBody, requireEnv, sendJson } from '../../_lib/http.js';
-import { getAdminClient, getSupabaseAnonKey } from '../../_lib/supabase.js';
+import { getJwtClaims, hashAdminOtp } from '../admin-otp.js';
+import { createHttpError, handleError, methodNotAllowed, readBody, requireEnv, sendJson } from '../http.js';
+import { getAdminClient, getSupabaseAnonKey } from '../supabase.js';
 
 async function writeAudit(client, telegramId, event) {
   const { error } = await client.from('admin_auth_audit').insert({ telegram_id: telegramId, event });

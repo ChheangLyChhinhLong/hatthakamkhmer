@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
-import { handleError, requireEnv, sendJson } from '../_lib/http.js';
-import { normalizeKhqrpayStatus } from '../_lib/khqrpay.js';
-import { applyPaymentEvent } from '../_lib/payments.js';
-import { verifyKhqrpaySignature } from '../_lib/webhook-signature.js';
+import { handleError, requireEnv, sendJson } from '../http.js';
+import { normalizeKhqrpayStatus } from '../khqrpay.js';
+import { applyPaymentEvent } from '../payments.js';
+import { verifyKhqrpaySignature } from '../webhook-signature.js';
 
 export const config = { api: { bodyParser: false } };
 

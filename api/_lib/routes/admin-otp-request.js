@@ -1,6 +1,6 @@
-import { createAdminOtp, hashAdminOtp } from '../../_lib/admin-otp.js';
-import { createHttpError, handleError, methodNotAllowed, readBody, requireEnv, sendJson } from '../../_lib/http.js';
-import { getAdminClient } from '../../_lib/supabase.js';
+import { createAdminOtp, hashAdminOtp } from '../admin-otp.js';
+import { createHttpError, handleError, methodNotAllowed, readBody, requireEnv, sendJson } from '../http.js';
+import { getAdminClient } from '../supabase.js';
 
 const genericMessage = 'If this Telegram account is authorized, a sign-in code will be sent.';
 

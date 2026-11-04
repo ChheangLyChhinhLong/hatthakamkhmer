@@ -1,6 +1,6 @@
-import { dispatchTelegramOutbox } from '../../_lib/telegram.js';
-import { handleError, methodNotAllowed, sendJson } from '../../_lib/http.js';
-import { requireAdmin } from '../../_lib/supabase.js';
+import { dispatchTelegramOutbox } from '../telegram.js';
+import { handleError, methodNotAllowed, sendJson } from '../http.js';
+import { requireAdmin } from '../supabase.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);

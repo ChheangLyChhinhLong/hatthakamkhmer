@@ -90,7 +90,7 @@ Configure the same variables in Vercel Project Settings. Set `PUBLIC_BASE_URL` t
 3. Add the environment variables, apply the Supabase migration, configure the Telegram domain and khqrpay webhook URL, then deploy.
 4. Test Telegram login, COD, ABA/Bakong payments using the khqrpay test page, webhook retries, and admin uploads before switching to production credentials.
 
-[`vercel.json`](./vercel.json) rewrites application paths to the SPA entry point. Vercel's filesystem API routes under `api/` remain available as serverless functions.
+[`vercel.json`](./vercel.json) rewrites application paths to the SPA entry point. API endpoints are dispatched through a single Vercel catch-all function so the project stays within the Hobby plan's serverless function limit; the payment webhook still receives its raw request body for signature verification.
 
 ## Commands
 

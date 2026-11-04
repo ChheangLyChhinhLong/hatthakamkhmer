@@ -1,5 +1,5 @@
-import { handleError, methodNotAllowed, readBody, sendJson, createHttpError } from '../_lib/http.js';
-import { getAdminClient, requireAdmin } from '../_lib/supabase.js';
+import { handleError, methodNotAllowed, readBody, sendJson, createHttpError } from '../http.js';
+import { getAdminClient, requireAdmin } from '../supabase.js';
 
 function validateProduct(body) {
   const required = ['id', 'name_km', 'name_en', 'description_km', 'category', 'material', 'province', 'badge', 'image_url', 'artisan_km', 'artisan_province'];

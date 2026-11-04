@@ -1,6 +1,6 @@
 import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
-import { createHttpError, handleError, methodNotAllowed, readBody, requireEnv, sendJson } from '../_lib/http.js';
-import { getAdminClient } from '../_lib/supabase.js';
+import { createHttpError, handleError, methodNotAllowed, readBody, requireEnv, sendJson } from '../http.js';
+import { getAdminClient } from '../supabase.js';
 
 function verifyTelegramLogin(payload, botToken) {
   if (!payload || typeof payload !== 'object' || typeof payload.hash !== 'string') return false;

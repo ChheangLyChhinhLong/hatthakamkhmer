@@ -1,7 +1,7 @@
-import { handleError, methodNotAllowed, readBody, requireEnv, sendJson, createHttpError } from '../_lib/http.js';
-import { getAdminClient, requireUser } from '../_lib/supabase.js';
-import { khqrpayRequest } from '../_lib/khqrpay.js';
-import { notifyNewOrder } from '../_lib/telegram.js';
+import { handleError, methodNotAllowed, readBody, requireEnv, sendJson, createHttpError } from '../http.js';
+import { getAdminClient, requireUser } from '../supabase.js';
+import { khqrpayRequest } from '../khqrpay.js';
+import { notifyNewOrder } from '../telegram.js';
 
 function validRequiredText(value, maxLength) {
   return typeof value === 'string' && value.trim().length > 0 && value.trim().length <= maxLength;
