@@ -44,10 +44,10 @@ The app can run without credentials in storefront preview mode using its sample 
 1. Create a bot with BotFather, then use `/setdomain` and register the deployed app's exact hostname (for example, `hatthakamkhmer.vercel.app`, without `https://` or a trailing slash).
 2. Set `VITE_TELEGRAM_BOT_USERNAME` to that bot's username without `@`, and set `TELEGRAM_BOT_TOKEN` to the token for the same bot. Rebuild and redeploy after changing the `VITE_` variable.
 3. Set `TELEGRAM_ADMIN_GROUP_ID` to the admin group/channel chat ID and add the bot with permission to send messages.
-4. The Login Widget requests permission for the bot to message the user. After entering a phone number, Telegram sends its own access-confirmation message; the user must approve it in the Telegram account before the widget returns a login result. The application cannot send this confirmation before Telegram grants access.
+4. The Login Widget asks Telegram to show its own sign-in authorization prompt; this is a Telegram-controlled popup, not a message sent by the shop. The user must approve it before the widget returns a login result. If the prompt does not appear, verify that the exact website hostname is registered with BotFather using `/setdomain`, and that `VITE_TELEGRAM_BOT_USERNAME` and `TELEGRAM_BOT_TOKEN` refer to the same bot. The application cannot force Telegram to display or approve this prompt.
 5. Telegram authentication is verified server-side using the Login Widget hash and a five-minute authentication age limit. The resulting Supabase session is issued using a one-time magic-link token.
 
-If the access-confirmation message does not arrive, verify that the user is signed in to the intended Telegram account, that the production hostname is registered with BotFather, and that the browser username and server token belong to the same bot. Vercel preview hostnames must also be registered separately if you use them for sign-in.
+Register each hostname used for sign-in with BotFather, including Vercel preview hostnames if you use them. The user must also be signed in to the intended Telegram account.
 
 Order notifications are stored in `public.telegram_outbox`. Failed messages remain retryable from the admin dashboard after Telegram is configured.
 

@@ -16,6 +16,7 @@ export default function Login() {
 
   useEffect(() => {
     if (!isSupabaseConfigured || !botUsername) return undefined;
+    let active = true;
     let script;
     window.onTelegramAuth = async (telegramUser) => {
       setLoading(true);
@@ -51,13 +52,16 @@ export default function Login() {
     script.dataset.radius = '3';
     script.dataset.requestAccess = 'write';
     script.dataset.onauth = 'onTelegramAuth(user)';
-    const host = document.getElementById('telegram-login-widget');
-    host?.appendChild(script);
+    script.onerror = () => {
+      if (active) setError('Telegram sign-in could not load. Check your internet connection and try again.');
+    };
+    document.getElementById('telegram-login-widget').appendChild(script);
     return () => {
+      active = false;
       script?.remove();
       delete window.onTelegramAuth;
     };
   }, [isSupabaseConfigured, navigate, searchParams]);
 
-  return <div className="login-page"><div className="login-card"><Link to="/" className="login-back"><ArrowLeft size={15} /> ត្រឡប់ទៅហាង</Link><div className="login-emblem"><LockKeyhole size={27} /></div><span className="eyebrow">A SAFER WAY TO CHECK OUT</span><h1>សូមស្វាគមន៍មកវិញ</h1><p className="login-description">ចូលដោយប្រើ Telegram ដើម្បីបញ្ជាក់អត្តសញ្ញាណ និងតាមដានការបញ្ជាទិញរបស់អ្នក។ បន្ទាប់ពីចុចប៊ូតុង សូមបើក Telegram ហើយចុច Confirm ដើម្បីអនុញ្ញាតការចូល។</p>{!isSupabaseConfigured && <div className="integration-notice">Supabase is not configured. Add the VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY variables to enable sign-in.</div>}{isSupabaseConfigured && !botUsername && <div className="integration-notice">Telegram sign-in is not configured. Set VITE_TELEGRAM_BOT_USERNAME to your bot username.</div>}<div id="telegram-login-widget" className="telegram-widget">{loading && <span>កំពុងផ្ទៀងផ្ទាត់គណនី Telegram...</span>}</div>{error && <p className="form-error" role="alert">{error}</p>}{message && <p className="form-success" role="status"><CheckCircle2 size={16} /> {message}</p>}<div className="login-security"><ShieldCheck size={16} /><span>ការផ្ទៀងផ្ទាត់ដោយសុវត្ថិភាព។ ហត្ថកម្មខ្មែរមិនទទួលបានលេខសម្ងាត់ Telegram របស់អ្នកទេ។</span></div><p className="login-terms">ការចូលបង្ហាញថាអ្នកយល់ព្រមជាមួយគោលការណ៍ឯកជនភាព និងលក្ខខណ្ឌប្រើប្រាស់របស់ហាង។</p></div></div>;
+  return <div className="login-page"><div className="login-card"><Link to="/" className="login-back"><ArrowLeft size={15} /> ត្រឡប់ទៅហាង</Link><div className="login-emblem"><LockKeyhole size={27} /></div><span className="eyebrow">A SAFER WAY TO CHECK OUT</span><h1>សូមស្វាគមន៍មកវិញ</h1><p className="login-description">ចូលដោយប្រើ Telegram ដើម្បីបញ្ជាក់អត្តសញ្ញាណ និងតាមដានការបញ្ជាទិញរបស់អ្នក។ បន្ទាប់ពីចុចប៊ូតុង សូមអនុញ្ញាតការចូលក្នុងផ្ទាំងបញ្ជាក់របស់ Telegram។</p>{!isSupabaseConfigured && <div className="integration-notice">Supabase is not configured. Add the VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY variables to enable sign-in.</div>}{isSupabaseConfigured && !botUsername && <div className="integration-notice">Telegram sign-in is not configured. Set VITE_TELEGRAM_BOT_USERNAME to your bot username.</div>}<div id="telegram-login-widget" className="telegram-widget">{loading && <span>កំពុងផ្ទៀងផ្ទាត់គណនី Telegram...</span>}</div>{error && <p className="form-error" role="alert">{error}</p>}<p className="login-terms">មិនឃើញផ្ទាំងបញ្ជាក់មែនទេ? សូមពិនិត្យថា domain របស់គេហទំព័រត្រូវបានចុះឈ្មោះជាមួយ bot តាមរយៈ /setdomain ក្នុង @BotFather និង username/token ជារបស់ bot ដូចគ្នា។</p>{message && <p className="form-success" role="status"><CheckCircle2 size={16} /> {message}</p>}<div className="login-security"><ShieldCheck size={16} /><span>ការផ្ទៀងផ្ទាត់ដោយសុវត្ថិភាព។ ហត្ថកម្មខ្មែរមិនទទួលបានលេខសម្ងាត់ Telegram របស់អ្នកទេ។</span></div><p className="login-terms">ការចូលបង្ហាញថាអ្នកយល់ព្រមជាមួយគោលការណ៍ឯកជនភាព និងលក្ខខណ្ឌប្រើប្រាស់របស់ហាង។</p></div></div>;
 }
