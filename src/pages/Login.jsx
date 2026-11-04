@@ -50,7 +50,6 @@ export default function Login() {
     script.dataset.telegramLogin = botUsername;
     script.dataset.size = 'large';
     script.dataset.radius = '3';
-    script.dataset.requestAccess = 'write';
     script.dataset.onauth = 'onTelegramAuth(user)';
     script.onerror = () => {
       if (active) setError('Telegram sign-in could not load. Check your internet connection and try again.');
