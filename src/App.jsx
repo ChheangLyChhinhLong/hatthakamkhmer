@@ -39,20 +39,14 @@ function AuthGate({ children }) {
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  if (authLoading) {
-    return <div className="login-page" role="status" aria-live="polite">កំពុងពិនិត្យស្ថានភាពការចូល...</div>;
-  }
-
   if (location.pathname === '/login') {
+    if (authLoading) {
+      return <div className="login-page" role="status" aria-live="polite">កំពុងពិនិត្យស្ថានភាពការចូល...</div>;
+    }
     if (!session) return <Suspense fallback={<PageFallback />}><Login /></Suspense>;
     const returnTo = searchParams.get('returnTo');
     const destination = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/';
     return <Navigate to={destination} replace />;
-  }
-
-  if (!session) {
-    const returnTo = `${location.pathname}${location.search}${location.hash}`;
-    return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace />;
   }
 
   return children;
