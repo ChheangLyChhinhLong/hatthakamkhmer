@@ -15,6 +15,7 @@ const Home = lazy(() => import('./pages/Home'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const Products = lazy(() => import('./pages/Products'));
 const Admin = lazy(() => import('./pages/Admin'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Login = lazy(() => import('./pages/Login'));
 const PaymentReturn = lazy(() => import('./pages/PaymentReturn'));
 
@@ -39,6 +40,10 @@ function AuthGate({ children }) {
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
+  if (location.pathname === '/admin/login') {
+    return <Suspense fallback={<PageFallback />}><AdminLogin /></Suspense>;
+  }
+
   if (location.pathname === '/login') {
     if (authLoading) {
       return <div className="login-page" role="status" aria-live="polite">កំពុងពិនិត្យស្ថានភាពការចូល...</div>;
@@ -62,5 +67,5 @@ function StoreNotice() {
 }
 
 export default function App() {
-  return <ShopProvider><ScrollToTop /><AuthGate><div className="app-shell"><Navbar /><StoreNotice /><main className="main-content"><Suspense fallback={<PageFallback />}><Routes><Route path="/" element={<Home />} /><Route path="/products" element={<Products />} /><Route path="/product/:id" element={<ProductDetail />} /><Route path="/artisans" element={<Artisans />} /><Route path="/about" element={<About />} /><Route path="/contact" element={<Contact />} /><Route path="/cart" element={<Cart />} /><Route path="/login" element={<Login />} /><Route path="/admin" element={<Admin />} /><Route path="/payment/return" element={<PaymentReturn />} /><Route path="*" element={<NotFound />} /></Routes></Suspense></main><Footer /><CartDrawer /><QuickViewModal /></div></AuthGate></ShopProvider>;
+  return <ShopProvider><ScrollToTop /><AuthGate><div className="app-shell"><Navbar /><StoreNotice /><main className="main-content"><Suspense fallback={<PageFallback />}><Routes><Route path="/" element={<Home />} /><Route path="/products" element={<Products />} /><Route path="/product/:id" element={<ProductDetail />} /><Route path="/artisans" element={<Artisans />} /><Route path="/about" element={<About />} /><Route path="/contact" element={<Contact />} /><Route path="/cart" element={<Cart />} /><Route path="/login" element={<Login />} /><Route path="/admin/login" element={<AdminLogin />} /><Route path="/admin" element={<Admin />} /><Route path="/payment/return" element={<PaymentReturn />} /><Route path="*" element={<NotFound />} /></Routes></Suspense></main><Footer /><CartDrawer /><QuickViewModal /></div></AuthGate></ShopProvider>;
 }

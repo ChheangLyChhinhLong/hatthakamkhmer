@@ -25,6 +25,7 @@ async function requestApi(path, token, options = {}) {
 
 export default function Admin() {
   const { session, profile, authLoading } = useShop();
+  const [otpAccess, setOtpAccess] = useState('checking');
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -37,8 +38,29 @@ export default function Admin() {
   const accessToken = session?.access_token;
   const isAdmin = profile?.role === 'admin';
 
+  useEffect(() => {
+    if (!accessToken || !isAdmin) return undefined;
+    let active = true;
+    fetch('/api/admin/session', { headers: { Authorization: `Bearer ${accessToken}` } })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) {
+          if (active) setOtpAccess(result.code === 'ADMIN_OTP_REQUIRED' ? 'required' : 'denied');
+          return;
+        }
+        if (active) setOtpAccess('verified');
+      })
+      .catch((caught) => {
+        if (active) {
+          setError(caught.message);
+          setOtpAccess('error');
+        }
+      });
+    return () => { active = false; };
+  }, [accessToken, isAdmin]);
+
   const loadOverview = useCallback(async () => {
-    if (!accessToken || !isAdmin) return;
+    if (!accessToken || !isAdmin || otpAccess !== 'verified') return;
     setLoading(true);
     setError('');
     try {
@@ -48,10 +70,10 @@ export default function Admin() {
     } finally {
       setLoading(false);
     }
-  }, [accessToken, isAdmin]);
+  }, [accessToken, isAdmin, otpAccess]);
 
   useEffect(() => {
-    if (!accessToken || !isAdmin) return undefined;
+    if (!accessToken || !isAdmin || otpAccess !== 'verified') return undefined;
     let active = true;
     requestApi('/api/admin/overview', accessToken)
       .then((data) => {
@@ -64,7 +86,7 @@ export default function Admin() {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [accessToken, isAdmin]);
+  }, [accessToken, isAdmin, otpAccess]);
 
   function startEdit(product) {
     setEditing(product.id);
@@ -178,8 +200,11 @@ export default function Admin() {
   }
 
   if (authLoading) return <div className="admin-gate"><LoaderCircle className="payment-spinner" /> Checking your sign-in…</div>;
-  if (!session) return <div className="admin-gate"><CircleAlert /><span className="eyebrow">ADMIN ACCESS</span><h1>សូមចូលជាមុន</h1><p>ផ្ទាំងគ្រប់គ្រងតម្រូវឱ្យចូលដោយ Telegram។</p><Link className="button button-primary" to="/login?returnTo=%2Fadmin">ចូលដោយ Telegram <ArrowRight size={16} /></Link></div>;
+  if (!session) return <div className="admin-gate"><CircleAlert /><span className="eyebrow">ADMIN ACCESS</span><h1>សូមផ្ទៀងផ្ទាត់ Admin</h1><p>ផ្ទាំងគ្រប់គ្រងប្រើលេខកូដ OTP តាម Telegram Bot។</p><Link className="button button-primary" to="/admin/login">ចូលដោយ Telegram OTP <ArrowRight size={16} /></Link></div>;
   if (profile?.role !== 'admin') return <div className="admin-gate"><CircleAlert /><span className="eyebrow">RESTRICTED AREA</span><h1>គណនីនេះមិនមានសិទ្ធិ Admin ទេ</h1><p>តួនាទីត្រូវបានអានពី Supabase និងមិនអាចកំណត់តាម browser បានទេ។</p><Link className="button button-outline" to="/">ត្រឡប់ទៅហាង</Link></div>;
+  if (otpAccess === 'checking') return <div className="admin-gate"><LoaderCircle className="payment-spinner" /> កំពុងពិនិត្យការផ្ទៀងផ្ទាត់ OTP…</div>;
+  if (otpAccess === 'required') return <div className="admin-gate"><CircleAlert /><span className="eyebrow">ADMIN OTP REQUIRED</span><h1>ត្រូវផ្ទៀងផ្ទាត់ OTP</h1><p>សូមចូលដោយលេខកូដ OTP តាម Telegram ដើម្បីបន្ត។</p><Link className="button button-primary" to="/admin/login">ចូលដោយ Telegram OTP <ArrowRight size={16} /></Link></div>;
+  if (otpAccess !== 'verified') return <div className="admin-gate"><CircleAlert /><span className="eyebrow">ADMIN ACCESS</span><h1>មិនអាចផ្ទៀងផ្ទាត់បានទេ</h1><p>{error || 'សូមផ្ទុកទំព័រឡើងវិញ ឬសាកល្បងម្តងទៀត។'}</p><Link className="button button-primary" to="/admin/login">សាកល្បងចូលម្ដងទៀត <ArrowRight size={16} /></Link></div>;
 
   return <div className="admin-page"><header className="admin-header"><div className="wrap admin-header-inner"><div><span className="eyebrow">HATTHAKAM · OPERATIONS</span><h1>ផ្ទាំងគ្រប់គ្រង</h1></div><div><button onClick={loadOverview} className="admin-refresh" disabled={loading}><RefreshCw size={15} /> ធ្វើបច្ចុប្បន្នភាព</button><Link to="/" className="admin-back">ត្រឡប់ទៅហាង <ArrowRight size={15} /></Link></div></div></header><div className="wrap admin-content">{error && <div className="admin-alert error-alert" role="alert"><CircleAlert size={17} /> {error}</div>}{notice && <div className="admin-alert success-alert" role="status"><Check size={17} /> {notice}<button onClick={() => setNotice('')} aria-label="បិទ"><X size={15} /></button></div>}{loading && !overview ? <div className="admin-loading"><LoaderCircle className="payment-spinner" /> Loading dashboard data…</div> : overview && <><section className="admin-stats"><article><span><BadgeDollarSign /></span><div><small>PAID SALES · 30 DAYS</small><strong>${overview.stats.paidSales30d.toFixed(2)}</strong></div></article><article><span><ShoppingBag /></span><div><small>TOTAL ORDERS</small><strong>{overview.stats.totalOrders}</strong></div></article><article><span><Activity /></span><div><small>AWAITING ACTION</small><strong>{overview.stats.pendingOrders}</strong></div></article><article><span><Boxes /></span><div><small>PRODUCTS</small><strong>{overview.stats.products}</strong></div></article></section>
       <section className="admin-panel"><div className="admin-panel-heading"><div><span className="eyebrow">FULFILMENT</span><h2>ការបញ្ជាទិញថ្មីៗ</h2></div><span className="admin-count">{overview.orders.length} recent</span></div>{overview.orders.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>លេខបញ្ជាទិញ</th><th>អតិថិជន</th><th>ថ្ងៃខែ</th><th>ទូទាត់</th><th>សរុប</th><th>ស្ថានភាព</th><th>គ្រប់គ្រង</th></tr></thead><tbody>{overview.orders.map((order) => <tr key={order.id}><td>#{order.id.slice(0, 8)}</td><td>{order.customer_name}<small>{order.phone}</small></td><td>{new Date(order.created_at).toLocaleDateString()}</td><td>{order.payment_method.toUpperCase()}</td><td>${Number(order.total_usd).toFixed(2)}</td><td><span className={`status-pill status-${order.status}`}>{order.status.replaceAll('_', ' ')}</span></td><td><select aria-label={`Update order ${order.id.slice(0, 8)}`} value="" onChange={(event) => event.target.value && updateOrder(order, event.target.value)}><option value="">Choose…</option>{({ pending_cod: ['processing', 'cancelled'], paid: ['processing'], processing: ['shipped', 'cancelled'], shipped: ['delivered'] }[order.status] || []).map((status) => <option value={status} key={status}>{status}</option>)}</select></td></tr>)}</tbody></table></div> : <p className="admin-empty">មិនទាន់មានការបញ្ជាទិញនៅឡើយទេ។</p>}</section>

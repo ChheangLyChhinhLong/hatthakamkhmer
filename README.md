@@ -51,6 +51,12 @@ Register each hostname used for sign-in with BotFather, including Vercel preview
 
 Order notifications are stored in `public.telegram_outbox`. Failed messages remain retryable from the admin dashboard after Telegram is configured.
 
+### Admin Telegram OTP
+
+The admin dashboard uses a separate OTP-only sign-in at `/admin/login`. Apply [`supabase/migrations/20261104000100_admin_telegram_otp.sql`](./supabase/migrations/20261104000100_admin_telegram_otp.sql) after the store migration, and configure `TELEGRAM_BOT_TOKEN`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` on the server. Each administrator must open the bot and press **Start** before requesting a code.
+
+Enter the administrator's Telegram numeric ID, which is stored in `public.profiles.telegram_id` (look it up in Supabase for accounts already assigned the `admin` role). Codes are single-use, expire after five minutes, allow at most five attempts, have a 60-second resend cooldown and a five-code-per-hour limit. Successful OTP sessions are limited to eight hours. Codes are HMAC-hashed in the database, and events are recorded in `public.admin_auth_audit`; OTP values are never stored in the audit log. Admin API routes and Supabase admin RLS policies require an OTP-issued session. Deploy the migration before using this login page.
+
 ## khqrpay and checkout
 
 Create an ABA or Bakong API key in the [khqrpay dashboard](https://khqrpay.site/dashboard). Set the API key's webhook secret there, then set the matching `KHQRPAY_API_KEY`, `KHQRPAY_WEBHOOK_SECRET`, and `PUBLIC_BASE_URL` in your deployment. The integration uses `https://khqrpay.site/api/v1` by default; `KHQRPAY_BASE_URL` may only point to that HTTPS host.

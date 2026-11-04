@@ -39,8 +39,18 @@ export default async function handler(req, res) {
       telegram_username: typeof body.username === 'string' ? body.username.slice(0, 64) : '',
       display_name: displayName,
     };
-    const email = `telegram-${body.id}@telegram.hatthakamkhmer.com`;
     const client = getAdminClient();
+    const { data: existingProfile, error: profileLookupError } = await client
+      .from('profiles')
+      .select('role')
+      .eq('telegram_id', String(body.id))
+      .maybeSingle();
+    if (profileLookupError) throw new Error(`Could not verify the Telegram profile: ${profileLookupError.message}`);
+    if (existingProfile?.role === 'admin') {
+      throw createHttpError(403, 'Admin accounts must sign in with a Telegram OTP.');
+    }
+
+    const email = `telegram-${body.id}@telegram.hatthakamkhmer.com`;
     const { data, error } = await client.auth.admin.generateLink({
       type: 'magiclink',
       email,

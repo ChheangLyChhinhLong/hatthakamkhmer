@@ -36,5 +36,25 @@ export async function requireUser(req) {
 export async function requireAdmin(req) {
   const session = await requireUser(req);
   if (session.profile.role !== 'admin') throw createHttpError(403, 'Admin access is required.');
+  const token = getBearerToken(req);
+  let claims;
+  try {
+    claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'));
+  } catch {
+    throw createHttpError(401, 'Your admin session is invalid. Sign in again.');
+  }
+  if (typeof claims.session_id !== 'string') {
+    throw createHttpError(403, 'Admin OTP sign-in is required.', 'ADMIN_OTP_REQUIRED');
+  }
+  const { data: adminSession, error: sessionError } = await getAdminClient()
+    .from('admin_auth_sessions')
+    .select('session_id')
+    .eq('session_id', claims.session_id)
+    .eq('user_id', session.user.id)
+    .is('revoked_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .maybeSingle();
+  if (sessionError) throw new Error(`Could not verify the admin OTP session: ${sessionError.message}`);
+  if (!adminSession) throw createHttpError(403, 'Admin OTP sign-in is required.', 'ADMIN_OTP_REQUIRED');
   return session;
 }
